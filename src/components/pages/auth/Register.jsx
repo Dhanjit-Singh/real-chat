@@ -23,7 +23,8 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const response = await axios.post("http://localhost:5000/api/users/create", formData, {
+        // const response = await axios.post("http://localhost:5000/api/users/create", formData, {
+        const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/create", formData, {
             headers: {
                 "Content-Type": "application/json",
             },

@@ -24,7 +24,8 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers }) =
 
         socket.emit("joinChat", selectedChat._id);
 
-        fetch(`http://localhost:5000/api/messages/${selectedChat._id}`)
+        // fetch(`http://localhost:5000/api/messages/${selectedChat._id}`)
+        fetch(`https://real-chat-backend-c3nm.onrender.com/api/messages/${selectedChat._id}`)
             .then((res) => res.json())
             .then((data) => setMessages(data));
 
