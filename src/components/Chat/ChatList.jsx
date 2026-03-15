@@ -48,7 +48,8 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
     };
 
     return (
-        <div className="w-full h-full border-r flex flex-col bg-inherit">
+        // <div className="w-full h-full border-r flex flex-col bg-inherit">
+        <div className="flex items-center gap-3 px-4 py-4 cursor-pointer border-b">
             {/* Header */}
             {/* <div className="w-full px-4 py-3 bg-gray-800 text-white font-semibold text-lg">
                 {loggedInUser?.name || ""}

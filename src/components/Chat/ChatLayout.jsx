@@ -42,12 +42,31 @@ const ChatLayout = () => {
         socket.emit("joinChat", selectedChat._id);
     }, [selectedChat]);
 
+    const handleBack = () => {
+        setSelectedChat(null);
+        setSelectedUser(null);
+    };
+
 
     return (
         <div className="flex h-full bg-gray-100">
 
             {/* Sidebar */}
-            <div className="hidden md:block md:w-1/4 border-r bg-white pt-16">
+            {/* <div className="hidden md:block md:w-1/4 border-r bg-white pt-16">
+                <ChatList
+                    selectedChat={selectedChat}
+                    onSelectChat={handleSelectChat}
+                    selectedUser={selectedUser}
+                    onSelectUser={handleSelectUser}
+                />
+            </div> */}
+
+            <div
+                className={`
+                    w-full md:w-1/4 border-r bg-white pt-16
+                    ${selectedChat ? "hidden md:block" : "block"}
+                `}
+            >
                 <ChatList
                     selectedChat={selectedChat}
                     onSelectChat={handleSelectChat}
@@ -57,12 +76,27 @@ const ChatLayout = () => {
             </div>
 
             {/* Chat Window */}
-            <div className="w-full md:w-3/4">
+            {/* <div className="w-full md:w-3/4">
                 <ChatWindow
                     selectedChat={selectedChat}
                     loggedInUser={loggedInUser}
                     selectedUser={selectedUser}
                     onlineUsers={onlineUsers}
+                />
+            </div> */}
+
+            <div
+                className={`
+                    w-full md:w-3/4
+                    ${!selectedChat ? "hidden md:block" : "block"}
+                `}
+            >
+                <ChatWindow
+                    selectedChat={selectedChat}
+                    loggedInUser={loggedInUser}
+                    selectedUser={selectedUser}
+                    onlineUsers={onlineUsers}
+                    onBack={handleBack}
                 />
             </div>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import MessageInput from "./MessageInput";
 import socket from "../../socket";
 
-const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers }) => {
+const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onBack }) => {
     const [messages, setMessages] = useState([]);
 
     const formatLastSeen = (date) => {
@@ -63,7 +63,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers }) =
 
             {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto space-y-4 mt-12">
-                <div className="w-full px-4 py-3 bg-teal-800 text-white font-semibold text-lg">
+                {/* <div className="w-full px-4 py-3 bg-teal-800 text-white font-semibold text-lg">
                     {selectedUser?.name || ""}
 
                     <div className="text-sm opacity-80">
@@ -71,6 +71,29 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers }) =
                             ? "Online"
                             : `Last seen ${formatLastSeen(selectedUser?.lastSeen)}`}
                     </div>
+                </div> */}
+
+                <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white">
+
+                    <button
+                        onClick={onBack}
+                        className="md:hidden text-xl font-bold"
+                    >
+                        ←
+                    </button>
+
+                    <div>
+                        <div className="font-semibold text-lg">
+                            {selectedUser?.name || ""}
+                        </div>
+
+                        <div className="text-sm opacity-80">
+                            {isOnline
+                                ? "Online"
+                                : `Last seen ${formatLastSeen(selectedUser?.lastSeen)}`}
+                        </div>
+                    </div>
+
                 </div>
 
                 {messages?.length > 0 ? (
@@ -88,7 +111,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers }) =
                             >
                                 <div
                                     className={`
-                                        max-w-[50%] px-3 py-2 rounded-lg
+                                        max-w-[75%] md:max-w-[50%] px-3 py-2 rounded-lg
                                         break-words whitespace-pre-wrap
                                         ${isMe
                                             ? "bg-blue-600 text-white rounded-br-none"
