@@ -99,7 +99,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
                 {messages?.length > 0 ? (
                     messages.map((msg) => {
                         const isMe =
@@ -133,7 +133,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     </div>
                 )}
             </div>
-            <div className="sticky bottom-0 bg-white border-t p-2">
+            <div className="fixed bottom-0 left-0 right-0 md:static bg-white border-t p-2">
                 <MessageInput onSend={handleSendMessage} />
             </div>
         </div>

@@ -3,7 +3,7 @@ import ChatLayout from "../Chat/ChatLayout";
 const ChatPage = () => {
     return (
         // <div className="h-screen">
-        <div className="h-[100vh] overflow-hidden">
+        <div className="min-h-screen">
             <ChatLayout />
         </div>
     );
