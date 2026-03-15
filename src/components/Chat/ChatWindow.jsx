@@ -62,8 +62,10 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         <div className="flex flex-col h-full">
 
             {/* Messages */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 mt-12">
-                {/* <div className="w-full px-4 py-3 bg-teal-800 text-white font-semibold text-lg">
+
+            {/* <div className="flex-1 p-4 overflow-y-auto space-y-4 mt-12"> */}
+            {/* <div className="flex-1 p-4 overflow-y-auto space-y-4 mt-12"> */}
+            {/* <div className="w-full px-4 py-3 bg-teal-800 text-white font-semibold text-lg">
                     {selectedUser?.name || ""}
 
                     <div className="text-sm opacity-80">
@@ -73,29 +75,31 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     </div>
                 </div> */}
 
-                <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white">
+            {/* <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white"> */}
+            <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white pt-16">
 
-                    <button
-                        onClick={onBack}
-                        className="md:hidden text-xl font-bold"
-                    >
-                        ←
-                    </button>
+                <button
+                    onClick={onBack}
+                    className="md:hidden text-xl font-bold"
+                >
+                    ←
+                </button>
 
-                    <div>
-                        <div className="font-semibold text-lg">
-                            {selectedUser?.name || ""}
-                        </div>
-
-                        <div className="text-sm opacity-80">
-                            {isOnline
-                                ? "Online"
-                                : `Last seen ${formatLastSeen(selectedUser?.lastSeen)}`}
-                        </div>
+                <div>
+                    <div className="font-semibold text-lg">
+                        {selectedUser?.name || ""}
                     </div>
 
+                    <div className="text-sm opacity-80">
+                        {isOnline
+                            ? "Online"
+                            : `Last seen ${formatLastSeen(selectedUser?.lastSeen)}`}
+                    </div>
                 </div>
 
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
                 {messages?.length > 0 ? (
                     messages.map((msg) => {
                         const isMe =
@@ -129,8 +133,9 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     </div>
                 )}
             </div>
-
-            <MessageInput onSend={handleSendMessage} />
+            <div className="sticky bottom-0 bg-white border-t p-2">
+                <MessageInput onSend={handleSendMessage} />
+            </div>
         </div>
     );
 };
