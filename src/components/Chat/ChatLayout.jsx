@@ -42,6 +42,12 @@ const ChatLayout = () => {
         socket.emit("joinChat", selectedChat._id);
     }, [selectedChat]);
 
+    useEffect(() => {
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
+    }, []);
+
     const handleBack = () => {
         setSelectedChat(null);
         setSelectedUser(null);

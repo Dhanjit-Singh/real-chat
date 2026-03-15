@@ -31,6 +31,19 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
         socket.on("receiveMessage", (msg) => {
             setMessages((prev) => [...prev, msg]);
+
+            // show browser notification
+            const senderId = msg.sender._id ? msg.sender._id : msg.sender;
+            if (
+                senderId !== loggedInUser.id &&
+                msg.chatId !== selectedChat._id &&
+                Notification.permission === "granted"
+            ) {
+                new Notification("New Message", {
+                    body: msg.text,
+                    icon: "/logo192.png"
+                });
+            }
         });
 
         return () => socket.off("receiveMessage");
@@ -80,7 +93,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
                 <button
                     onClick={onBack}
-                    className="md:hidden text-xl font-bold"
+                    className="md:hidden flex items-center justify-center w-10 h-10 text-2xl font-bold"
                 >
                     ←
                 </button>
