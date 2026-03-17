@@ -48,28 +48,7 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
     };
 
     return (
-        // <div className="w-full h-full border-r flex flex-col bg-inherit">
         <div className="flex items-center gap-3 px-4 py-4 cursor-pointer border-b">
-            {/* Header */}
-            {/* <div className="w-full px-4 py-3 bg-gray-800 text-white font-semibold text-lg">
-                {loggedInUser?.name || ""}
-            </div> */}
-
-            {/* <div className="w-full px-4 py-3 bg-gray-800 text-white flex items-center gap-3">
-
-                <img
-                    src={avatarImg}
-                    alt="profile"
-                    className="w-10 h-10 rounded-full object-cover"
-                />
-
-                <div className="flex flex-col">
-                    <span className="font-semibold text-lg">
-                        {loggedInUser?.name || ""}
-                    </span>
-                </div>
-
-            </div> */}
 
             {/* Chat List */}
             <div className="flex-1 overflow-y-auto">

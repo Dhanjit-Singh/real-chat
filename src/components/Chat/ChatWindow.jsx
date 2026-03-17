@@ -75,21 +75,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         <div className="flex flex-col h-full">
 
             {/* Messages */}
-
-            {/* <div className="flex-1 p-4 overflow-y-auto space-y-4 mt-12"> */}
-            {/* <div className="flex-1 p-4 overflow-y-auto space-y-4 mt-12"> */}
-            {/* <div className="w-full px-4 py-3 bg-teal-800 text-white font-semibold text-lg">
-                    {selectedUser?.name || ""}
-
-                    <div className="text-sm opacity-80">
-                        {isOnline
-                            ? "Online"
-                            : `Last seen ${formatLastSeen(selectedUser?.lastSeen)}`}
-                    </div>
-                </div> */}
-
-            {/* <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white"> */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white pt-16">
+            <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white flex-shrink-0 pt-16">
 
                 <button
                     onClick={onBack}

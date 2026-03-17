@@ -55,7 +55,7 @@ const ChatLayout = () => {
 
 
     return (
-        <div className="flex h-full bg-gray-100">
+        <div className="flex h-screen bg-gray-100 overflow-hidden">
 
             {/* Sidebar */}
             {/* <div className="hidden md:block md:w-1/4 border-r bg-white pt-16">
