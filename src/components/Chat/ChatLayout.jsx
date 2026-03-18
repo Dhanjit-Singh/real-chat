@@ -31,7 +31,7 @@ const ChatLayout = () => {
                 if (permission !== "granted") return;
 
                 const registration = await navigator.serviceWorker.register(
-                    "/firebase-messaging-sw.js"
+                    "/real-chat/firebase-messaging-sw.js"
                 );
 
                 const token = await getToken(messaging, {
