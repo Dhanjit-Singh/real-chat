@@ -31,7 +31,7 @@ const ChatLayout = () => {
                 if (permission !== "granted") return;
 
                 const registration = await navigator.serviceWorker.register(
-                    "/real-chat/firebase-messaging-sw.js"
+                    "/firebase-messaging-sw.js"
                 );
 
                 const token = await getToken(messaging, {
@@ -91,12 +91,6 @@ const ChatLayout = () => {
 
         socket.emit("joinChat", selectedChat._id);
     }, [selectedChat]);
-
-    useEffect(() => {
-        if ("Notification" in window) {
-            Notification.requestPermission();
-        }
-    }, []);
 
     const handleBack = () => {
         setSelectedChat(null);
