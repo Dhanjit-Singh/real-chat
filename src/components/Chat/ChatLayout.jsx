@@ -34,8 +34,13 @@ const ChatLayout = () => {
                     "/real-chat/firebase-messaging-sw.js"
                 );
 
+                // const token = await getToken(messaging, {
+                //     vapidKey: process.env.REACT_APP_VAPID_KEY,
+                //     serviceWorkerRegistration: registration
+                // });
+
                 const token = await getToken(messaging, {
-                    vapidKey: process.env.REACT_APP_VAPID_KEY,
+                    vapidKey: "BKB4fGD1X_YsyQtQwnjWidf7qzkq_VdQGvXNQO2OcLugghxfsFDqENT8zzmSmGbOCvVB6NC2e-eACBHEbqawBmo",
                     serviceWorkerRegistration: registration
                 });
 
