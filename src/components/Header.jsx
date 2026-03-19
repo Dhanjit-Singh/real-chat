@@ -11,15 +11,20 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             socket.disconnect();
+            const fcmToken = localStorage.getItem("fcmToken");
             // const response = await axios.post("http://localhost:5000/api/users/logout",{ userId: user.id });
-            const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/logout",{ userId: user.id });
+            const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/logout", {
+                userId: user.id,
+                token: fcmToken
+            });
             if (response.data.status === true) {
                 console.log("logout successful");
+                localStorage.removeItem("fcmToken");
             }
         } catch (error) {
             console.log("Logout API failed", error);
         } finally {
-            
+
             logout();
             navigate("/login");
         }

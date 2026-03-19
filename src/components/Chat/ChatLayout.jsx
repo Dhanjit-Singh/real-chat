@@ -46,7 +46,7 @@ const ChatLayout = () => {
 
                 if (token) {
                     console.log("FCM Token:", token);
-
+                    localStorage.setItem("fcmToken", token);
                     // ✅ Correct Axios POST
                     await api.post("/api/notifications/save-token", {
                         userId: loggedInUser?.id,
