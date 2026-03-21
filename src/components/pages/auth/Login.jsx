@@ -9,6 +9,7 @@ const Login = () => {
     const { login } = useAuth();
 
     const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -24,6 +25,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            setLoading(true);
             // const response = await axios.post("http://localhost:5000/api/users/login", formData, {
             const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/login", formData, {
                 headers: {
@@ -34,9 +36,11 @@ const Login = () => {
             if (response.data.status === true) {
                 login(response.data.user);
                 navigate("/");
+                setLoading(false);
             }
         } catch (error) {
             console.log("Login failed====>>>", error);
+            setLoading(false);
         }
     };
 
@@ -79,9 +83,12 @@ const Login = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
                     >
                         Login
+                        {loading && (
+                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        )}
                     </button>
                 </form>
 
@@ -89,7 +96,7 @@ const Login = () => {
                 <p className="text-sm text-center text-gray-600 mt-6">
                     Don’t have an account?
                     <span className="text-blue-600 cursor-pointer hover:underline">
-                        <Link to="/register"> Register</Link> 
+                        <Link to="/register"> Register</Link>
                     </span>
                 </p>
             </div>

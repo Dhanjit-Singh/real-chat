@@ -7,6 +7,7 @@ import { messaging, getToken, onMessage } from "../../firebase";
 import api from "../../api/api";
 
 const ChatLayout = () => {
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedChat, setSelectedChat] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
@@ -34,11 +35,6 @@ const ChatLayout = () => {
                     "/real-chat/firebase-messaging-sw.js"
                 );
 
-                // const token = await getToken(messaging, {
-                //     vapidKey: process.env.REACT_APP_VAPID_KEY,
-                //     serviceWorkerRegistration: registration
-                // });
-
                 const token = await getToken(messaging, {
                     vapidKey: "BKB4fGD1X_YsyQtQwnjWidf7qzkq_VdQGvXNQO2OcLugghxfsFDqENT8zzmSmGbOCvVB6NC2e-eACBHEbqawBmo",
                     serviceWorkerRegistration: registration
@@ -47,7 +43,6 @@ const ChatLayout = () => {
                 if (token) {
                     console.log("FCM Token:", token);
                     localStorage.setItem("fcmToken", token);
-                    // ✅ Correct Axios POST
                     await api.post("/api/notifications/save-token", {
                         userId: loggedInUser?.id,
                         token
@@ -67,9 +62,14 @@ const ChatLayout = () => {
     }, [loggedInUser]);
 
     useEffect(() => {
-        if (!loggedInUser?.id) return;
+        if (!loggedInUser?.id) {
+            setIsLoading(false);
+            return;
+        }
 
+        setIsLoading(true);
         socket.emit("userOnline", loggedInUser.id);
+        setIsLoading(false);
 
     }, [loggedInUser?.id]);
 
@@ -104,38 +104,46 @@ const ChatLayout = () => {
 
 
     return (
-        <div className="flex h-screen bg-gray-100 overflow-hidden">
+        <>
+            {isLoading ? (
+                <div className="flex items-center justify-center h-screen">
+                    <div className="h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            ) : (
+                <div className="flex h-screen bg-gray-100 overflow-hidden">
 
-            <div
-                className={`
+                    <div
+                        className={`
                     w-full md:w-1/4 border-r bg-white pt-16
                     ${selectedChat ? "hidden md:block" : "block"}
                 `}
-            >
-                <ChatList
-                    selectedChat={selectedChat}
-                    onSelectChat={handleSelectChat}
-                    selectedUser={selectedUser}
-                    onSelectUser={handleSelectUser}
-                />
-            </div>
+                    >
+                        <ChatList
+                            selectedChat={selectedChat}
+                            onSelectChat={handleSelectChat}
+                            selectedUser={selectedUser}
+                            onSelectUser={handleSelectUser}
+                        />
+                    </div>
 
-            <div
-                className={`
+                    <div
+                        className={`
                     w-full md:w-3/4
                     ${!selectedChat ? "hidden md:block" : "block"}
                 `}
-            >
-                <ChatWindow
-                    selectedChat={selectedChat}
-                    loggedInUser={loggedInUser}
-                    selectedUser={selectedUser}
-                    onlineUsers={onlineUsers}
-                    onBack={handleBack}
-                />
-            </div>
+                    >
+                        <ChatWindow
+                            selectedChat={selectedChat}
+                            loggedInUser={loggedInUser}
+                            selectedUser={selectedUser}
+                            onlineUsers={onlineUsers}
+                            onBack={handleBack}
+                        />
+                    </div>
 
-        </div>
+                </div>
+            )}
+        </>
     );
 };
 
