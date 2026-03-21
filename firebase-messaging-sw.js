@@ -33,7 +33,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyBL65bsQsRSScRKKRP5ev9Jh7Hj3zVbMlA",
   authDomain: "real-chat-7038a.firebaseapp.com",
   projectId: "real-chat-7038a",
-  // storageBucket: "YOUR_PROJECT.appspot.com",
   messagingSenderId: "1042387637315",
   appId: "1:1042387637315:web:27af360f7900e88cd830f6",
 };
@@ -51,5 +50,18 @@ messaging.onBackgroundMessage(function (payload) {
   self.registration.showNotification(payload.notification.title, {
     body: payload.notification.body,
     icon: "/real-chat/logo192.png", // important for GitHub Pages
+  });
+});
+
+self.addEventListener("push", function (event) {
+  console.log("Push received:", event);
+
+  if (!event.data) return;
+
+  const data = event.data.json();
+
+  self.registration.showNotification(data.notification.title, {
+    body: data.notification.body,
+    icon: "/real-chat/logo192.png",
   });
 });
