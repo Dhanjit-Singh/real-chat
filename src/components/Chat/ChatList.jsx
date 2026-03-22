@@ -13,7 +13,10 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
 
     const fetchUsers = async () => {
         try {
-            const res = await api.get("/api/users");
+            // const res = await api.get("/api/users");
+            const res = await api.get(
+                `/api/users?userId=${loggedInUser.id}`
+            );
             // console.log("users res==>>", res.data);
             setUsers(res.data);
         } catch (error) {
@@ -34,6 +37,13 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
         }
 
         onSelectUser(user);
+        setUsers(prev =>
+            prev.map(u =>
+                u._id === user._id
+                    ? { ...u, unreadCount: 0 }
+                    : u
+            )
+        );
 
         try {
             const res = await api.post("/api/chats", {
@@ -42,6 +52,11 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
             });
 
             onSelectChat(res.data);
+
+            await api.post("/api/chats/reset-unread", {
+                senderId: user._id,
+                userId: loggedInUser.id
+            });
         } catch (err) {
             console.error(err);
         }
@@ -70,12 +85,27 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
                                 `}
                             >
 
-                                {/* Profile Image */}
-                                <img
-                                    src={avatarImg}
-                                    alt="profile"
-                                    className="w-10 h-10 rounded-full object-cover"
-                                />
+                                {/* Avatar + Notification */}
+                                <div className="relative">
+                                    <img
+                                        src={avatarImg}
+                                        alt="profile"
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+
+                                    {/* Badge (only show if unread > 0) */}
+                                    {user.unreadCount > 0 && (
+                                        <span className="
+                                            absolute -top-1 -right-1
+                                            bg-red-500 text-white text-xs
+                                            min-w-[18px] h-[18px] px-1
+                                            flex items-center justify-center
+                                            rounded-full border-2 border-white
+                                        ">
+                                            {user.unreadCount > 99 ? "99+" : user.unreadCount}
+                                        </span>
+                                    )}
+                                </div>
 
                                 {/* User Name */}
                                 <div>

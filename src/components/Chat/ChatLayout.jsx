@@ -25,41 +25,41 @@ const ChatLayout = () => {
         });
     }, []);
 
-    useEffect(() => {
-        const getFCMToken = async () => {
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission !== "granted") return;
+    // useEffect(() => {
+    //     const getFCMToken = async () => {
+    //         try {
+    //             const permission = await Notification.requestPermission();
+    //             if (permission !== "granted") return;
 
-                const registration = await navigator.serviceWorker.register(
-                    "/real-chat/firebase-messaging-sw.js"
-                );
+    //             const registration = await navigator.serviceWorker.register(
+    //                 "/real-chat/firebase-messaging-sw.js"
+    //             );
 
-                const token = await getToken(messaging, {
-                    vapidKey: "BKB4fGD1X_YsyQtQwnjWidf7qzkq_VdQGvXNQO2OcLugghxfsFDqENT8zzmSmGbOCvVB6NC2e-eACBHEbqawBmo",
-                    serviceWorkerRegistration: registration
-                });
+    //             const token = await getToken(messaging, {
+    //                 vapidKey: "BKB4fGD1X_YsyQtQwnjWidf7qzkq_VdQGvXNQO2OcLugghxfsFDqENT8zzmSmGbOCvVB6NC2e-eACBHEbqawBmo",
+    //                 serviceWorkerRegistration: registration
+    //             });
 
-                if (token) {
-                    console.log("FCM Token:", token);
-                    localStorage.setItem("fcmToken", token);
-                    await api.post("/api/notifications/save-token", {
-                        userId: loggedInUser?.id,
-                        token
-                    });
+    //             if (token) {
+    //                 console.log("FCM Token:", token);
+    //                 localStorage.setItem("fcmToken", token);
+    //                 await api.post("/api/notifications/save-token", {
+    //                     userId: loggedInUser?.id,
+    //                     token
+    //                 });
 
-                } else {
-                    console.log("No registration token available");
-                }
-            } catch (err) {
-                console.error("FCM error:", err);
-            }
-        };
+    //             } else {
+    //                 console.log("No registration token available");
+    //             }
+    //         } catch (err) {
+    //             console.error("FCM error:", err);
+    //         }
+    //     };
 
-        if (loggedInUser?.id) {
-            getFCMToken();
-        }
-    }, [loggedInUser]);
+    //     if (loggedInUser?.id) {
+    //         getFCMToken();
+    //     }
+    // }, [loggedInUser]);
 
     useEffect(() => {
         if (!loggedInUser?.id) {

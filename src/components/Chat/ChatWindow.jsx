@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import MessageInput from "./MessageInput";
 import socket from "../../socket";
+import api from "../../api/api";
 
 const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onBack }) => {
     const [messages, setMessages] = useState([]);
@@ -15,7 +16,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             day: "numeric",
             month: "short",
             hour: "2-digit",
-            minute: "2-digit",
+            minute: "2-digit"
         });
     };
 
@@ -24,10 +25,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
         socket.emit("joinChat", selectedChat._id);
 
-        // fetch(`http://localhost:5000/api/messages/${selectedChat._id}`)
-        fetch(`https://real-chat-backend-c3nm.onrender.com/api/messages/${selectedChat._id}`)
-            .then((res) => res.json())
-            .then((data) => setMessages(data));
+        // fetch(`https://real-chat-backend-c3nm.onrender.com/api/messages/${selectedChat._id}`)
+        api.get(`/api/messages/${selectedChat._id}`)
+            .then((res) => {
+                console.log("d res===>>>", res);
+                setMessages(res.data);
+            })
+            .catch((err) => console.error(err));
+        // setMessages(data);
+        //         .then((res) => res.json())
+        // .then((data) => setMessages(data));
 
         socket.on("receiveMessage", (msg) => {
             setMessages((prev) => [...prev, msg]);

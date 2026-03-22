@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import axios from "axios";
+import api from "../../../api/api";
 
 const Login = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
 
     const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -25,9 +26,10 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            setLoading(true);
+            setIsLoading(true);
             // const response = await axios.post("http://localhost:5000/api/users/login", formData, {
-            const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/login", formData, {
+            const response = await api.post("/api/users/login", formData, {
+            // const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/login", formData, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -36,11 +38,11 @@ const Login = () => {
             if (response.data.status === true) {
                 login(response.data.user);
                 navigate("/");
-                setLoading(false);
+                setIsLoading(false);
             }
         } catch (error) {
             console.log("Login failed====>>>", error);
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -86,7 +88,7 @@ const Login = () => {
                         className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
                     >
                         Login
-                        {loading && (
+                        {isLoading && (
                             <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         )}
                     </button>
