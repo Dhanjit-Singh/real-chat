@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
 import avatarImg from "../../assets/images/avatar-img.jpg";
+import socket from "../../socket";
 
 const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) => {
     const { user: loggedInUser } = useAuth();
-    console.log("loggedInUser===>>>>", loggedInUser);
+    // console.log("loggedInUser===>>>>", loggedInUser);
 
     const [users, setUsers] = useState([]);
-
-    // const loggedInUserId = "69900aa8cd2c52707754241d";
 
     const fetchUsers = async () => {
         try {
@@ -25,7 +24,36 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
     };
 
     useEffect(() => {
-        fetchUsers();
+        if (loggedInUser?.id) {
+            fetchUsers();
+        }
+    }, [loggedInUser]);
+
+    useEffect(() => {
+        if (loggedInUser?.id) {
+            socket.emit("userOnline", loggedInUser.id);
+        }
+    }, [loggedInUser]);
+
+    useEffect(() => {
+        const handleUnreadUpdate = ({ senderId }) => {
+            setUsers(prev =>
+                prev.map(user =>
+                    user._id === senderId
+                        ? {
+                            ...user,
+                            unreadCount: (user.unreadCount || 0) + 1
+                        }
+                        : user
+                )
+            );
+        };
+
+        socket.on("unread_update", handleUnreadUpdate);
+
+        return () => {
+            socket.off("unread_update", handleUnreadUpdate);
+        };
     }, []);
 
 
