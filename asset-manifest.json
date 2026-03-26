@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/real-chat/static/css/main.adf59a0d.css",
-    "main.js": "/real-chat/static/js/main.6c9b60a4.js",
+    "main.css": "/real-chat/static/css/main.c3256daa.css",
+    "main.js": "/real-chat/static/js/main.c7a95d33.js",
     "static/js/453.3a5c6e4e.chunk.js": "/real-chat/static/js/453.3a5c6e4e.chunk.js",
     "static/media/avatar-img.jpg": "/real-chat/static/media/avatar-img.565149f5ac01d4172265.jpg",
     "index.html": "/real-chat/index.html",
-    "main.adf59a0d.css.map": "/real-chat/static/css/main.adf59a0d.css.map",
-    "main.6c9b60a4.js.map": "/real-chat/static/js/main.6c9b60a4.js.map",
+    "main.c3256daa.css.map": "/real-chat/static/css/main.c3256daa.css.map",
+    "main.c7a95d33.js.map": "/real-chat/static/js/main.c7a95d33.js.map",
     "453.3a5c6e4e.chunk.js.map": "/real-chat/static/js/453.3a5c6e4e.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.adf59a0d.css",
-    "static/js/main.6c9b60a4.js"
+    "static/css/main.c3256daa.css",
+    "static/js/main.c7a95d33.js"
   ]
 }
