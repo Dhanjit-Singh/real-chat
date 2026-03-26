@@ -32,7 +32,9 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     }, []);
 
     const formatLastSeen = (date) => {
-        if (!date) return "";
+        if (!date) {
+            return "";
+        }
 
         const d = new Date(date);
 
@@ -59,8 +61,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             })
             .catch((err) => console.error(err));
     }, [selectedChat?._id]);
-
-
 
     const handleSendMessage = (text) => {
         if (!text.trim()) {
@@ -93,10 +93,10 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
 
-            {/* Messages */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white flex-shrink-0 pt-16">
+            {/* header */}
+            <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-teal-800 text-white shadow-md pt-16">
 
                 <button
                     onClick={onBack}
@@ -119,7 +119,8 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+            {/* message */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages?.length > 0 ? (
                     messages.map((msg) => {
                         const senderId = msg.sender?._id || msg.sender;
@@ -151,7 +152,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     </div>
                 )}
             </div>
-            <div className="fixed bottom-0 left-0 right-0 md:static bg-white border-t p-2">
+            <div className="bg-white border-t p-2 flex-shrink-0">
                 <MessageInput onSend={handleSendMessage} />
             </div>
         </div>

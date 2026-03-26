@@ -72,13 +72,13 @@ const ChatLayout = () => {
                     <div className="h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 </div>
             ) : (
-                <div className="flex h-screen bg-gray-100 overflow-hidden">
+                <div className="flex h-full bg-gray-100 overflow-hidden">
 
                     <div
                         className={`
-                    w-full md:w-1/4 border-r bg-white pt-16
-                    ${selectedChat ? "hidden md:block" : "block"}
-                `}
+                            w-full md:w-1/4 border-r bg-white h-full overflow-hidden
+                            ${selectedChat ? "hidden md:block" : "block"}
+                        `}
                     >
                         <ChatList
                             selectedChat={selectedChat}
@@ -90,9 +90,9 @@ const ChatLayout = () => {
 
                     <div
                         className={`
-                    w-full md:w-3/4
-                    ${!selectedChat ? "hidden md:block" : "block"}
-                `}
+                            w-full md:w-3/4 h-full overflow-hidden
+                            ${!selectedChat ? "hidden md:block" : "block"}
+                        `}
                     >
                         <ChatWindow
                             selectedChat={selectedChat}

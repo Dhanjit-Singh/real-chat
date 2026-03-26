@@ -52,6 +52,7 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
         return () => {
             socket.off("unread_update", handleUnreadUpdate);
         };
+        
     }, []);
 
 
@@ -61,12 +62,12 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
         }
 
         onSelectUser(user);
-        // onSelectChat(chat);
-        // onSelectChat({ ...chat });
+        
         onSelectChat({
             ...chat,
             _id: chat._id + ""
         });
+
         setUsers(prev =>
             prev.map(c =>
                 c._id === chat._id
@@ -86,10 +87,10 @@ const ChatList = ({ onSelectChat, selectedChat, onSelectUser, selectedUser }) =>
     };
 
     return (
-        <div className="flex items-center gap-3 px-4 py-4 cursor-pointer border-b">
+        <div className="h-full flex flex-col">
 
             {/* Chat List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto pt-16">
                 {users?.length > 0 && loggedInUser?.id &&
                     users.map((chat) => {
 

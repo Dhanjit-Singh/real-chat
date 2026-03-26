@@ -11,12 +11,14 @@ function App() {
     <>
       <Router basename="/real-chat">
         <Header />
-        <Routes>
-          <Route path='/' element={<ChatPage />} />
-          <Route path='/register' element={<Register />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/add-friend' element={<AddFriend />} />
-        </Routes>
+        <div className="overflow-hidden">
+          <Routes>
+            <Route path='/' element={<ChatPage />} />
+            <Route path='/register' element={<Register />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/add-friend' element={<AddFriend />} />
+          </Routes>
+        </div >
       </Router>
     </>
   );

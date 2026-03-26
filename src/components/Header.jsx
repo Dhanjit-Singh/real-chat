@@ -7,7 +7,6 @@ import socket from "../socket";
 import api from "../api/api";
 import { toast, Toaster } from "react-hot-toast";
 
-
 const Header = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +54,7 @@ const Header = () => {
                 }}
             />
 
-            <header className="w-full bg-emerald-200 shadow-sm fixed top-0">
+            <header className="w-full bg-emerald-200 shadow-sm fixed top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
 
                     {user && (
@@ -83,7 +82,6 @@ const Header = () => {
                     )}
 
                     {/* Auth Buttons */}
-
                     <div className="flex items-center space-x-3">
                         {!user && (
                             <>
