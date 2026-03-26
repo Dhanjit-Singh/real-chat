@@ -1,20 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import api from "../../../api/api";
-import { toast } from "react-hot-toast";
+import { useAuth } from "../../../context/AuthContext";
+import { toast, Toaster } from "react-hot-toast";
 
-const Login = () => {
+
+const AddFriend = () => {
+    const { user: loggedInUser } = useAuth();
+
     const navigate = useNavigate();
-    const { login } = useAuth();
-
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        name: "",
+        email: ""
     });
 
     const handleInputs = (e) => {
@@ -22,26 +23,53 @@ const Login = () => {
         setFormData(prev => ({
             ...prev, [name]: value
         }));
+
+        setErrors(prev => ({
+            ...prev,
+            [name]: ""
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        let newErrors = {};
+
+        if (!formData.name.trim()) {
+            newErrors.name = "Name is required";
+            setErrors(newErrors);
+            return;
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+            setErrors(newErrors);
+            return;
+        }
+
+        setErrors({});
+        setIsLoading(true);
         try {
-            setIsLoading(true);
-            const response = await api.post("/api/users/login", formData, {
+            const response = await api.post("/api/users/add-friend", {
+                userId: loggedInUser.id,
+                name: formData.name,
+                email: formData.email
+            }, {
                 headers: {
                     "Content-Type": "application/json",
                 },
             });
 
             if (response.data.status === true) {
-                login(response.data.user);
+                setIsLoading(false);
                 toast.success(response.data.message);
                 navigate("/");
-                setIsLoading(false);
+                setFormData({
+                    name: "",
+                    email: ""
+                });
             }
         } catch (error) {
-            console.log("Login failed====>>>", error);
             toast.error(error.response?.data?.message || "Something went wrong");
             setIsLoading(false);
         }
@@ -54,11 +82,27 @@ const Login = () => {
 
                     {/* Title */}
                     <h1 className="text-2xl font-bold text-center mb-6">
-                        Welcome Back
+                        Add Friend
                     </h1>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Name
+                            </label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleInputs}
+                                autoComplete="new-name"
+                                placeholder="Enter your name"
+                                className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            />
+                            {errors.name && <p className="text-red-500">{errors.name}</p>}
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700">
                                 Email
@@ -66,47 +110,29 @@ const Login = () => {
                             <input
                                 type="email"
                                 name="email"
+                                value={formData.email}
                                 onChange={handleInputs}
+                                autoComplete="new-email"
                                 placeholder="Enter your email"
                                 className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                onChange={handleInputs}
-                                placeholder="Enter your password"
-                                className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            />
+                            {errors.email && <p className="text-red-500">{errors.email}</p>}
                         </div>
 
                         <button
                             type="submit"
                             className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
                         >
-                            Login
+                            Add
                             {isLoading && (
                                 <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             )}
                         </button>
                     </form>
-
-                    {/* Footer */}
-                    <p className="text-sm text-center text-gray-600 mt-6">
-                        Don’t have an account?
-                        <span className="text-blue-600 cursor-pointer hover:underline">
-                            <Link to="/register"> Register</Link>
-                        </span>
-                    </p>
                 </div>
             </div>
         </>
     );
 };
 
-export default Login;
+export default AddFriend;

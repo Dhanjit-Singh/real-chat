@@ -6,6 +6,31 @@ import api from "../../api/api";
 const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onBack }) => {
     const [messages, setMessages] = useState([]);
 
+    useEffect(() => {
+        const handleReceiveMessage = (msg) => {
+            // setMessages((prev) => [...prev, msg]);
+            setMessages((prev) => {
+                const exists = prev.some((m) => m._id === msg._id);
+                if (exists) return prev;
+                return [...prev, msg];
+            });
+            const senderId = msg.sender?._id || msg.sender;
+        };
+
+        socket.on("receiveMessage", handleReceiveMessage);
+
+        return () => {
+            socket.off("receiveMessage", handleReceiveMessage);
+        };
+
+    }, []);
+
+    useEffect(() => {
+        if (!socket.connected) {
+            socket.connect();
+        }
+    }, []);
+
     const formatLastSeen = (date) => {
         if (!date) return "";
 
@@ -21,42 +46,31 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     };
 
     useEffect(() => {
-        if (!selectedChat) return;
+        if (!selectedChat) {
+            return;
+        }
 
         socket.emit("joinChat", selectedChat._id);
+        setMessages([]);
 
-        // fetch(`https://real-chat-backend-c3nm.onrender.com/api/messages/${selectedChat._id}`)
         api.get(`/api/messages/${selectedChat._id}`)
             .then((res) => {
-                console.log("d res===>>>", res);
                 setMessages(res.data);
             })
             .catch((err) => console.error(err));
-        // setMessages(data);
-        //         .then((res) => res.json())
-        // .then((data) => setMessages(data));
+    }, [selectedChat?._id]);
 
-        socket.on("receiveMessage", (msg) => {
-            setMessages((prev) => [...prev, msg]);
 
-            // show browser notification
-            const senderId = msg.sender._id ? msg.sender._id : msg.sender;
-            if (
-                senderId !== loggedInUser.id &&
-                msg.chatId !== selectedChat._id &&
-                Notification.permission === "granted"
-            ) {
-                new Notification("New Message", {
-                    body: msg.text,
-                    icon: "/logo192.png"
-                });
-            }
-        });
-
-        return () => socket.off("receiveMessage");
-    }, [selectedChat]);
 
     const handleSendMessage = (text) => {
+        if (!text.trim()) {
+            return;
+        }
+
+        if (!socket.connected) {
+            return;
+        }
+
         socket.emit("sendMessage", {
             chatId: selectedChat._id,
             senderId: loggedInUser.id,
@@ -75,7 +89,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     }
 
     if (!loggedInUser) {
-        return;
+        return null;
     }
 
     return (
@@ -108,10 +122,8 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
                 {messages?.length > 0 ? (
                     messages.map((msg) => {
-                        const isMe =
-                            msg.sender._id
-                                ? msg.sender._id === loggedInUser.id
-                                : msg.sender === loggedInUser.id;
+                        const senderId = msg.sender?._id || msg.sender;
+                        const isMe = senderId.toString() === loggedInUser.id.toString();
 
                         return (
 

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import api from "../../../api/api";
+import { toast } from "react-hot-toast";
+
 
 const Register = () => {
     const navigate = useNavigate();
@@ -60,7 +62,6 @@ const Register = () => {
         setIsLoading(true);
         try {
             const response = await api.post("/api/users/create", formData, {
-                // const response = await axios.post("https://real-chat-backend-c3nm.onrender.com/api/users/create", formData, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -68,10 +69,12 @@ const Register = () => {
 
             if (response.data.status === true) {
                 setIsLoading(false);
+                toast.success(response.data.message);
                 navigate("/login");
             }
         } catch (error) {
             console.log("Login failed====>>>", error);
+            toast.error(error.response?.data?.message || "Something went wrong");
             setIsLoading(false);
         }
     };

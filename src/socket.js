@@ -5,6 +5,8 @@ import { io } from "socket.io-client";
 
 const socket = io("https://real-chat-backend-c3nm.onrender.com", {
     withCredentials: true,
+    autoConnect: true,
+    reconnection: true,
     transports: ["websocket", "polling"]
 });
 //========end ======
@@ -12,7 +14,9 @@ const socket = io("https://real-chat-backend-c3nm.onrender.com", {
 //======== for local =========
 // const socket = io("http://localhost:5000", {
 //     withCredentials: true,
-//     transports: ["websocket"]
+//     autoConnect: true,
+//     reconnection: true,
+//     // transports: ["websocket"]
 // });
 
 //======== end =========
