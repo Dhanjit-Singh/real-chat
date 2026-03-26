@@ -152,10 +152,8 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     </div>
                 )}
             </div>
-            <div className="absolute bottom-2 left-0 right-0 px-3">
-                <div className="bg-white rounded-full shadow-lg border p-3">
-                    <MessageInput onSend={handleSendMessage} />
-                </div>
+            <div className="sticky bottom-0 bg-white px-3 py-2 border-t">
+                <MessageInput onSend={handleSendMessage} />
             </div>
         </div>
     );
