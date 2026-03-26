@@ -93,7 +93,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     }
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden relative">
 
             {/* header */}
             <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-teal-800 text-white shadow-md pt-16">
@@ -120,7 +120,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             </div>
 
             {/* message */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
                 {messages?.length > 0 ? (
                     messages.map((msg) => {
                         const senderId = msg.sender?._id || msg.sender;
@@ -152,8 +152,10 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     </div>
                 )}
             </div>
-            <div className="bg-white border-t p-2 flex-shrink-0">
-                <MessageInput onSend={handleSendMessage} />
+            <div className="absolute bottom-2 left-0 right-0 px-3">
+                <div className="bg-white rounded-full shadow-lg border p-3">
+                    <MessageInput onSend={handleSendMessage} />
+                </div>
             </div>
         </div>
     );
