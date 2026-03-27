@@ -5,6 +5,8 @@ import Register from "./components/pages/auth/Register";
 import Login from './components/pages/auth/Login';
 import ChatPage from "./components/pages/ChatPage";
 import AddFriend from './components/pages/auth/AddFriend';
+import FAQPage from './components/pages/FAQPage';
+import AboutUs from './components/pages/AboutUs';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
             <Route path='/register' element={<Register />} />
             <Route path='/login' element={<Login />} />
             <Route path='/add-friend' element={<AddFriend />} />
+            <Route path='/faq' element={<FAQPage />} />
+            <Route path='/about-us' element={<AboutUs />} />
           </Routes>
         </div >
       </Router>

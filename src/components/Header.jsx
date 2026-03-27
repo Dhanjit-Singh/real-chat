@@ -71,11 +71,11 @@ const Header = () => {
                                 </span>
 
                                 <span className="text-gray-600 hover:text-blue-600 cursor-pointer">
-                                    About
+                                    <Link to="/about-us">About</Link>
                                 </span>
 
                                 <span className="text-gray-600 hover:text-blue-600 cursor-pointer">
-                                    Contact
+                                    <Link to="/faq">FAQ's</Link>
                                 </span>
                             </nav>
                         </>
