@@ -63,7 +63,7 @@ const FAQPage = () => {
 
     return (
         <>
-            <div className="min-h-screen items-center justify-center bg-gray-100 px-4 pt-8">
+            <div className="min-h-screen items-center justify-center bg-gray-100 pt-8">
                 <div className="min-h-screen bg-gray-50 px-4 py-10">
                     <div className="max-w-3xl mx-auto">
                         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
