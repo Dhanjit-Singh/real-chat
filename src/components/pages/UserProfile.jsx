@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { FiMail, FiMapPin, FiCalendar, FiEdit2, FiShare2, FiCamera, FiSettings, FiHeart, FiMessageCircle, FiUsers } from "react-icons/fi";
-import { useAuth } from "../../context/AuthContext";
 import api from "../../api/api";
 import { FaUserTie } from "react-icons/fa";
+import { useLocation } from 'react-router-dom';
 
 
-const MyProfile = () => {
+const UserProfile = () => {
 
-    const { user } = useAuth();
+    const location = useLocation();
+    const { user } = location.state || {};
     const [isEditing, setIsEditing] = useState(false);
     const [profileData, setProfileData] = useState({
         name: "",
@@ -17,7 +18,7 @@ const MyProfile = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await api.get(`/api/users/get-user/${user?.id}`);
+            const response = await api.get(`/api/users/get-user/${user?._id}`);
             if (response.data.status === true) {
                 setProfileData(response.data.data);
             }
@@ -27,10 +28,10 @@ const MyProfile = () => {
     }
     useEffect(() => {
 
-        if (user?.id) {
+        if (user?._id) {
             fetchUser();
         }
-    }, [user?.id]);
+    }, [user?._id]);
 
     const [editedData, setEditedData] = useState(profileData);
 
@@ -50,7 +51,6 @@ const MyProfile = () => {
         const { name, value } = e.target;
         setEditedData(prev => ({ ...prev, [name]: value }));
     };
-
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 mt-10">
@@ -227,4 +227,4 @@ const MyProfile = () => {
     );
 };
 
-export default MyProfile;
+export default UserProfile;

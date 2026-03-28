@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import MessageInput from "./MessageInput";
 import socket from "../../socket";
 import api from "../../api/api";
 import { FiArrowLeft, FiMoreVertical, FiPhone, FiVideo, FiInfo, FiCheck, FiCheckCircle, FiUser, FiCircle } from "react-icons/fi";
+import UserProfile from "../pages/UserProfile";
 
 const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onBack }) => {
     const [messages, setMessages] = useState([]);
@@ -158,12 +160,12 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
                     {/* Right Section - Actions */}
                     <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
+                        {/* <button className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
                             <FiPhone className="text-gray-600 text-lg" />
                         </button>
                         <button className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200">
                             <FiVideo className="text-gray-600 text-lg" />
-                        </button>
+                        </button> */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowMenu(!showMenu)}
@@ -177,7 +179,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-20">
                                     <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2">
                                         <FiInfo className="text-gray-400" />
-                                        View Profile
+                                        <Link to="/user-profile" state={{ user: selectedUser }}> View Profile</Link>
                                     </button>
                                     <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2">
                                         <FiUser className="text-red-400" />

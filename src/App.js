@@ -8,6 +8,7 @@ import AddFriend from './components/pages/auth/AddFriend';
 import FAQPage from './components/pages/FAQPage';
 import AboutUs from './components/pages/AboutUs';
 import MyProfile from './components/pages/MyProfile';
+import UserProfile from './components/pages/UserProfile';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path='/faq' element={<FAQPage />} />
             <Route path='/about-us' element={<AboutUs />} />
             <Route path='/my-profile' element={<MyProfile />} />
+            <Route path='/user-profile' element={<UserProfile />} />
           </Routes>
         </div >
       </Router>
