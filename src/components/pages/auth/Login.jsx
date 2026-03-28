@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import axios from "axios";
 import api from "../../../api/api";
 import { toast } from "react-hot-toast";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiLogIn, FiArrowRight } from "react-icons/fi";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -12,6 +12,7 @@ const Login = () => {
 
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -22,10 +23,37 @@ const Login = () => {
         setFormData(prev => ({
             ...prev, [name]: value
         }));
+
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = "Please enter a valid email address";
+        }
+
+        if (!formData.password) {
+            newErrors.password = "Password is required";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
         try {
             setIsLoading(true);
             const response = await api.post("/api/users/login", formData, {
@@ -49,60 +77,144 @@ const Login = () => {
 
     return (
         <>
-            <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-                <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-8 mt-10">
+                <div className="w-full max-w-md">
 
-                    {/* Title */}
-                    <h1 className="text-2xl font-bold text-center mb-6">
-                        Welcome Back
-                    </h1>
+                    {/* Logo/Brand Section */}
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg mb-4">
+                            <FiLogIn className="text-white text-2xl" />
+                        </div>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            Welcome Back
+                        </h2>
+                        <p className="text-gray-500 text-sm mt-2">
+                            Sign in to continue to your account
+                        </p>
+                    </div>
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                onChange={handleInputs}
-                                placeholder="Enter your email"
-                                className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            />
+                    {/* Main Card */}
+                    <div className="bg-white rounded-2xl shadow-xl p-8">
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-5">
+
+                            {/* Email Field */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <FiMail className="text-gray-400 text-sm" />
+                                        <span>Email Address</span>
+                                    </div>
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputs}
+                                    placeholder="Enter your email"
+                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 ${errors.email ? "border-red-400 focus:ring-red-500" : "border-gray-200 focus:border-blue-400"
+                                        }`}
+                                />
+                                {errors.email && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                                )}
+                            </div>
+
+                            {/* Password Field */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <FiLock className="text-gray-400 text-sm" />
+                                        <span>Password</span>
+                                    </div>
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleInputs}
+                                        placeholder="Enter your password"
+                                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-200 pr-12 ${errors.password ? "border-red-400 focus:ring-red-500" : "border-gray-200 focus:border-blue-400"
+                                            }`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                    >
+                                        {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                                    </button>
+                                </div>
+                                {errors.password && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                                )}
+                            </div>
+
+                            {/* Forgot Password Link */}
+                            <div className="text-right">
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Signing in...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Sign In</span>
+                                        <FiArrowRight className="text-lg" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        {/* Divider */}
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-3 bg-white text-gray-400">or</span>
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                onChange={handleInputs}
-                                placeholder="Enter your password"
-                                className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            />
+                        {/* Demo Credentials */}
+                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                            <p className="text-xs text-gray-500 text-center mb-2">Demo Credentials</p>
+                            <div className="text-xs text-gray-600 space-y-1">
+                                <p className="flex justify-between">
+                                    <span>Email:</span>
+                                    <span className="font-mono text-blue-600">demo@realchat.com</span>
+                                </p>
+                                <p className="flex justify-between">
+                                    <span>Password:</span>
+                                    <span className="font-mono text-blue-600">••••••••</span>
+                                </p>
+                            </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                        >
-                            Login
-                            {isLoading && (
-                                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            )}
-                        </button>
-                    </form>
-
-                    {/* Footer */}
-                    <p className="text-sm text-center text-gray-600 mt-6">
-                        Don’t have an account?
-                        <span className="text-blue-600 cursor-pointer hover:underline">
-                            <Link to="/register"> Register</Link>
-                        </span>
-                    </p>
+                        {/* Footer */}
+                        <p className="text-sm text-center text-gray-600">
+                            Don't have an account?
+                            <Link to="/register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline ml-1 transition-colors duration-200">
+                                Create account
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </>
