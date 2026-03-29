@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import MessageInput from "./MessageInput";
 import socket from "../../socket";
 import api from "../../api/api";
-import { FiArrowLeft, FiMoreVertical, FiPhone, FiVideo, FiInfo, FiCheck, FiCheckCircle, FiUser, FiCircle } from "react-icons/fi";
-import UserProfile from "../pages/UserProfile";
+import { FiArrowLeft, FiMoreVertical, FiPhone, FiVideo, FiInfo, FiCheck, FiCheckCircle, FiUser, FiCircle, FiImage } from "react-icons/fi";
 
 const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onBack }) => {
     const [messages, setMessages] = useState([]);
     const messagesEndRef = useRef(null);
     const [showMenu, setShowMenu] = useState(false);
+    const [sendingImage, setSendingImage] = useState(false);
 
     useEffect(() => {
         const handleReceiveMessage = (msg) => {
@@ -21,10 +21,20 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             const senderId = msg.sender?._id || msg.sender;
         };
 
+        const handleReceiveImage = (imageMsg) => {
+            setMessages((prev) => {
+                const exists = prev.some((m) => m._id === imageMsg._id);
+                if (exists) return prev;
+                return [...prev, imageMsg];
+            });
+        };
+
         socket.on("receiveMessage", handleReceiveMessage);
+        socket.on("receiveImage", handleReceiveImage);
 
         return () => {
             socket.off("receiveMessage", handleReceiveMessage);
+            socket.off("receiveImage", handleReceiveImage);
         };
 
     }, []);
@@ -91,6 +101,23 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             senderId: loggedInUser.id,
             text,
         });
+    };
+
+    const handleSendImage = (message) => {
+        // Just add the message to local state, no API call here
+        setMessages(prev => [...prev, message]);
+
+        // Emit through socket for real-time delivery
+        if (socket && socket.connected) {
+            socket.emit("sendImage", {
+                chatId: selectedChat._id,
+                senderId: loggedInUser.id,
+                imageUrl: message.imageUrl,
+                imageName: message.imageName,
+                imageSize: message.imageSize,
+                messageId: message._id
+            });
+        }
     };
 
     const isOnline = onlineUsers?.includes(selectedUser?._id);
@@ -225,14 +252,33 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                     <div className="group relative">
                                         <div
                                             className={`
-                                                px-4 py-2.5 rounded-2xl
+                                                rounded-2xl
                                                 break-words whitespace-pre-wrap
                                                 ${isMe
                                                     ? "bg-blue-600 text-white rounded-br-md"
                                                     : "bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-100"}
+                                                ${msg.imageUrl ? 'p-0' : 'px-4 py-2.5'}
                                             `}
                                         >
-                                            {msg?.text || ""}
+                                            {msg.imageUrl ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <img
+                                                        src={`http://localhost:5000${msg.imageUrl}`}
+                                                        alt={msg.imageName || "Image"}
+                                                        className="max-w-full max-h-64 rounded-lg cursor-pointer"
+                                                        onClick={() => window.open(`http://localhost:5000${msg.imageUrl}`, '_blank')}
+                                                        onError={(e) => {
+                                                            console.error("Image failed to load:", msg.imageUrl);
+                                                            e.target.style.display = 'none';
+                                                            e.target.parentElement.innerHTML = '<p class="text-red-500">Failed to load image</p>';
+                                                        }}
+                                                    />
+                                                    {msg.text && <p className="mt-1">{msg.text}</p>}
+                                                </div>
+                                            ) : (
+                                                msg?.text || ""
+                                            )}
+
                                         </div>
 
                                         {/* Message Status & Time */}
@@ -268,7 +314,13 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             {/* Message Input */}
             <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3">
-                <MessageInput onSend={handleSendMessage} />
+                <MessageInput
+                    onSend={handleSendMessage}
+                    onSendImage={handleSendImage}
+                    chatId={selectedChat._id}
+                    senderId={loggedInUser.id}
+                    isUploading={sendingImage}
+                />
             </div>
         </div>
     );
