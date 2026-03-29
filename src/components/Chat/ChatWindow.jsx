@@ -263,10 +263,11 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                             {msg.imageUrl ? (
                                                 <div className="flex flex-col gap-2">
                                                     <img
-                                                        src={`http://localhost:5000${msg.imageUrl}`}
+                                                        // src={`http://localhost:5000${msg.imageUrl}`}
+                                                        src={`https://real-chat-backend-c3nm.onrender.com${msg.imageUrl}`}
                                                         alt={msg.imageName || "Image"}
                                                         className="max-w-full max-h-64 rounded-lg cursor-pointer"
-                                                        onClick={() => window.open(`http://localhost:5000${msg.imageUrl}`, '_blank')}
+                                                        onClick={() => window.open(`https://real-chat-backend-c3nm.onrender.com${msg.imageUrl}`, '_blank')}
                                                         onError={(e) => {
                                                             console.error("Image failed to load:", msg.imageUrl);
                                                             e.target.style.display = 'none';
