@@ -287,27 +287,30 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             localStreamRef.current = stream;
 
-            // Display local video
+            // Display local video (small window)
             if (localVideoRef.current && type === 'video') {
+                console.log("Setting local video stream on caller side");
                 localVideoRef.current.srcObject = stream;
-                await localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
+                localVideoRef.current.muted = true;
+
+                localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
             console.log("Making call to:", selectedUser._id);
 
-            // Make the call
+            // Make the call with the stream
             const call = peerRef.current.call(selectedUser._id, stream);
             currentCallRef.current = call;
 
-            // Handle remote stream
+            // Handle remote stream (receiver's video)
             call.on('stream', (remoteStream) => {
-                console.log("📹 Received remote stream!");
+                console.log("📹 Caller received remote stream from receiver!");
 
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
                     remoteVideoRef.current.play()
                         .then(() => {
-                            console.log("✅ Remote video playing");
+                            console.log("✅ Remote video playing on caller side");
                             setRemoteStreamActive(true);
                         })
                         .catch(e => console.error("Remote video play error:", e));
@@ -342,13 +345,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
         } catch (error) {
             console.error("❌ Error in startCall:", error);
-            if (error.name === "NotAllowedError") {
-                setErrorMessage("Camera/Microphone access denied");
-            } else if (error.name === "NotFoundError") {
-                setErrorMessage("No camera or microphone found");
-            } else {
-                setErrorMessage("Unable to access camera/microphone");
-            }
+            setErrorMessage("Unable to access camera/microphone");
             setTimeout(() => setErrorMessage(null), 3000);
             endCall(true);
         } finally {
@@ -384,26 +381,32 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             localStreamRef.current = stream;
 
-            // Display local video
+            // Display local video (small window on receiver side)
             if (localVideoRef.current) {
+                console.log("Setting local video stream on receiver side");
                 localVideoRef.current.srcObject = stream;
-                await localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
+                localVideoRef.current.muted = true;
+                localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
             console.log("Answering the call...");
 
-            // Answer the call with stream
+            // CRITICAL: Answer the call with the stream
             currentCallRef.current.answer(stream);
+            console.log("Call answered");
 
-            // Handle remote stream
+            // CRITICAL: Handle remote stream (caller's video)
+            // This is where the caller's video comes in
             currentCallRef.current.on('stream', (remoteStream) => {
-                console.log("📹 Got remote stream from caller!");
+                console.log("📹 Receiver got remote stream from caller!");
+                console.log("Remote stream tracks:", remoteStream.getTracks().length);
 
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
+                    remoteVideoRef.current.muted = false;
                     remoteVideoRef.current.play()
                         .then(() => {
-                            console.log("✅ Remote video playing");
+                            console.log("✅ Remote video playing on receiver side");
                             setRemoteStreamActive(true);
                         })
                         .catch(e => console.error("Remote video play error:", e));
@@ -446,6 +449,29 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             isAcceptingCall.current = false;
         }
     };
+
+    // Add this useEffect to verify video elements are ready
+    useEffect(() => {
+        if (callStarted && callType === 'video') {
+            console.log("Video elements status:");
+            console.log("- Local video element:", localVideoRef.current);
+            console.log("- Remote video element:", remoteVideoRef.current);
+            console.log("- Local stream:", localStreamRef.current);
+
+            // Small delay to ensure DOM is ready
+            const timer = setTimeout(() => {
+                if (localVideoRef.current && localStreamRef.current) {
+                    if (!localVideoRef.current.srcObject) {
+                        console.log("Re-attaching local stream");
+                        localVideoRef.current.srcObject = localStreamRef.current;
+                        localVideoRef.current.play().catch(e => console.log("Play error:", e));
+                    }
+                }
+            }, 100);
+
+            return () => clearTimeout(timer);
+        }
+    }, [callStarted, callType]);
 
     // Reject incoming call
     const rejectCall = () => {
@@ -553,6 +579,39 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             </div>
         );
     }
+
+    // Add this useEffect after your other useEffects to handle video track renegotiation
+    useEffect(() => {
+        if (!callStarted || !currentCallRef.current) return;
+
+        // This ensures that if video tracks are added/removed during the call, they're handled
+        const handleNegotiationNeeded = () => {
+            console.log("Negotiation needed - renegotiating tracks");
+            if (currentCallRef.current && localStreamRef.current) {
+                // Re-add tracks if needed
+                localStreamRef.current.getTracks().forEach(track => {
+                    if (currentCallRef.current.peerConnection) {
+                        const sender = currentCallRef.current.peerConnection
+                            .getSenders()
+                            .find(s => s.track?.kind === track.kind);
+                        if (sender && sender.track !== track) {
+                            sender.replaceTrack(track);
+                        }
+                    }
+                });
+            }
+        };
+
+        if (currentCallRef.current.peerConnection) {
+            currentCallRef.current.peerConnection.onnegotiationneeded = handleNegotiationNeeded;
+        }
+
+        return () => {
+            if (currentCallRef.current?.peerConnection) {
+                currentCallRef.current.peerConnection.onnegotiationneeded = null;
+            }
+        };
+    }, [callStarted, currentCallRef.current, localStreamRef.current]);
 
     if (!loggedInUser) {
         return null;
