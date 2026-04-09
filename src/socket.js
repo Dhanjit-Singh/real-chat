@@ -1,7 +1,6 @@
 import { io } from "socket.io-client";
 
 //======== for production ======
-// const socket = io("https://real-chat-backend-c3nm.onrender.com");
 
 const socket = io("https://real-chat-backend-c3nm.onrender.com", {
     withCredentials: true,
@@ -16,7 +15,6 @@ const socket = io("https://real-chat-backend-c3nm.onrender.com", {
 //     withCredentials: true,
 //     autoConnect: true,
 //     reconnection: true,
-//     // transports: ["websocket"]
 // });
 
 //======== end =========
