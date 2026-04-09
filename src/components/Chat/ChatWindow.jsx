@@ -313,6 +313,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         if (!peerRef.current || !peerReady) {
             console.error("PeerJS not initialized or not ready");
             alert("Call system is initializing. Please wait a moment and try again.");
+            endCall(true);
             return;
         }
 
@@ -343,40 +344,63 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             localStreamRef.current = stream;
 
+            // Display local video
             if (localVideoRef.current && type === 'video') {
-                setVideoSource(localVideoRef.current, stream, true);
+                localVideoRef.current.srcObject = stream;
+                localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
             console.log("Making call to:", selectedUser._id);
+
+            // IMPORTANT: Pass the stream when making the call
             const call = peerRef.current.call(selectedUser._id, stream);
             currentCallRef.current = call;
 
+            // Handle remote stream (this is where the receiver's video comes in)
             call.on('stream', (remoteStream) => {
+                console.log("📹 Received remote stream from callee!");
+                console.log("Remote stream tracks:", remoteStream.getTracks().length);
+
                 if (isRemoteStreamSetRef.current) {
                     console.log("⚠️ Stream already handled, skipping...");
                     return;
                 }
 
                 isRemoteStreamSetRef.current = true;
-                console.log("✅ Received remote stream from callee!");
 
                 if (remoteVideoRef.current) {
+                    // IMPORTANT: Clear any existing stream
+                    if (remoteVideoRef.current.srcObject) {
+                        remoteVideoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                    }
+
                     remoteVideoRef.current.srcObject = remoteStream;
                     remoteVideoRef.current.muted = false;
                     remoteVideoRef.current.volume = 1;
 
-                    remoteVideoRef.current.onloadedmetadata = () => {
-                        remoteVideoRef.current.play().catch(e =>
-                            console.error("Remote video play error:", e)
-                        );
-                    };
-
-                    setRemoteStreamActive(true);
+                    // Force play with error handling
+                    const playPromise = remoteVideoRef.current.play();
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                console.log("✅ Remote video playing successfully");
+                                setRemoteStreamActive(true);
+                            })
+                            .catch(error => {
+                                console.error("Remote video play error:", error);
+                                // Try again after a short delay
+                                setTimeout(() => {
+                                    if (remoteVideoRef.current && remoteVideoRef.current.srcObject === remoteStream) {
+                                        remoteVideoRef.current.play().catch(e => console.log("Retry failed:", e));
+                                    }
+                                }, 100);
+                            });
+                    }
                 }
             });
 
             call.on('close', () => {
-                console.log("Call closed (remote or peer)");
+                console.log("Call closed");
                 currentCallRef.current = null;
                 setCallStarted(false);
                 setCallType(null);
@@ -405,12 +429,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             console.error("❌ Error in startCall:", error);
             if (error.name === "NotAllowedError") {
                 alert("Camera/Microphone access denied. Please click 'Allow' when prompted.");
+                endCall(true);
             } else if (error.name === "NotFoundError") {
                 alert("No camera or microphone found on your device.");
+                endCall(true);
             } else if (error.name === "NotReadableError" || error.message.includes("in use")) {
                 alert("Camera/Microphone is in use by another application. Please close other apps and try again.");
+                endCall(true);
             } else {
                 alert(`Unable to access camera/microphone: ${error.message}`);
+                endCall(true);
             }
             await cleanupLocalStream();
             endCall(true);
@@ -445,7 +473,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const constraints = {
-                video: incomingCall.callType === 'video',
+                video: incomingCall?.callType === 'video',
                 audio: true
             };
 
@@ -457,40 +485,62 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             localStreamRef.current = stream;
 
+            // Display local video
             if (localVideoRef.current) {
-                setVideoSource(localVideoRef.current, stream, true);
+                localVideoRef.current.srcObject = stream;
+                localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
             console.log("Answering the call...");
+
+            // IMPORTANT: Answer with the stream
             currentCallRef.current.answer(stream);
             console.log("Call answered");
 
+            // Handle remote stream (this is where the caller's video comes in)
             currentCallRef.current.on('stream', (remoteStream) => {
+                console.log("📹 Got remote stream from caller!");
+                console.log("Remote stream tracks:", remoteStream.getTracks().length);
+
                 if (isRemoteStreamSetRef.current) {
                     console.log("⚠️ Stream already handled, skipping...");
                     return;
                 }
 
                 isRemoteStreamSetRef.current = true;
-                console.log("✅ Got remote stream from caller!");
 
                 if (remoteVideoRef.current) {
+                    // IMPORTANT: Clear any existing stream
+                    if (remoteVideoRef.current.srcObject) {
+                        remoteVideoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                    }
+
                     remoteVideoRef.current.srcObject = remoteStream;
                     remoteVideoRef.current.muted = false;
                     remoteVideoRef.current.volume = 1;
 
-                    remoteVideoRef.current.onloadedmetadata = () => {
-                        remoteVideoRef.current.play().catch(e =>
-                            console.error("Remote video play error:", e)
-                        );
-                    };
-
-                    setRemoteStreamActive(true);
+                    // Force play with error handling
+                    const playPromise = remoteVideoRef.current.play();
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                console.log("✅ Remote video playing successfully");
+                                setRemoteStreamActive(true);
+                            })
+                            .catch(error => {
+                                console.error("Remote video play error:", error);
+                                setTimeout(() => {
+                                    if (remoteVideoRef.current && remoteVideoRef.current.srcObject === remoteStream) {
+                                        remoteVideoRef.current.play().catch(e => console.log("Retry failed:", e));
+                                    }
+                                }, 100);
+                            });
+                    }
                 }
             });
 
             currentCallRef.current.on('close', () => {
-                console.log("Call closed (remote)");
+                console.log("Call closed");
                 currentCallRef.current = null;
                 setCallStarted(false);
                 setCallType(null);
@@ -505,7 +555,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             });
 
             setCallStarted(true);
-            setCallType('video');
+            setCallType(incomingCall?.callType || 'video');
 
             socket.emit("accept-call", {
                 to: incomingCall.from,
@@ -519,12 +569,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             console.error("Error accepting call:", error);
             if (error.name === "NotAllowedError") {
                 alert("Camera/Microphone access denied. Please allow permissions.");
+                endCall(true);
             } else if (error.name === "NotFoundError") {
                 alert("No camera or microphone found on your device.");
+                endCall(true);
             } else if (error.name === "NotReadableError" || error.message.includes("in use")) {
                 alert("Camera/Microphone is in use by another application. Please close other apps and try again.");
+                endCall(true);
             } else {
                 alert("Unable to access camera/microphone: " + error.message);
+                endCall(true);
             }
             await cleanupLocalStream();
             rejectCall();
