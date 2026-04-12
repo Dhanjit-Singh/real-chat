@@ -178,6 +178,86 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    useEffect(() => {
+        if (!selectedChat) return;
+
+        socket.emit("joinChat", selectedChat._id);
+        setMessages([]);
+
+        api.get(`/api/messages/${selectedChat._id}`)
+            .then((res) => {
+                setMessages(res.data);
+            })
+            .catch((err) => console.error(err));
+    }, [selectedChat?._id]);
+
+    // Add this useEffect to verify video elements are ready
+    useEffect(() => {
+        if (callStarted && callType === 'video') {
+            console.log("Video elements status:");
+            console.log("- Local video element:", localVideoRef.current);
+            console.log("- Remote video element:", remoteVideoRef.current);
+            console.log("- Local stream:", localStreamRef.current);
+
+            // Small delay to ensure DOM is ready
+            const timer = setTimeout(() => {
+                if (localVideoRef.current && localStreamRef.current) {
+                    if (!localVideoRef.current.srcObject) {
+                        console.log("Re-attaching local stream");
+                        localVideoRef.current.srcObject = localStreamRef.current;
+                        localVideoRef.current.play().catch(e => console.log("Play error:", e));
+                    }
+                }
+            }, 100);
+
+            return () => clearTimeout(timer);
+        }
+    }, [callStarted, callType]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            cleanupLocalStream();
+            if (currentCallRef.current) {
+                currentCallRef.current.close();
+                currentCallRef.current = null;
+            }
+        };
+    }, []);
+
+    // Add this useEffect after your other useEffects to handle video track renegotiation
+    useEffect(() => {
+        if (!callStarted || !currentCallRef.current) return;
+
+        // This ensures that if video tracks are added/removed during the call, they're handled
+        const handleNegotiationNeeded = () => {
+            console.log("Negotiation needed - renegotiating tracks");
+            if (currentCallRef.current && localStreamRef.current) {
+                // Re-add tracks if needed
+                localStreamRef.current.getTracks().forEach(track => {
+                    if (currentCallRef.current.peerConnection) {
+                        const sender = currentCallRef.current.peerConnection
+                            .getSenders()
+                            .find(s => s.track?.kind === track.kind);
+                        if (sender && sender.track !== track) {
+                            sender.replaceTrack(track);
+                        }
+                    }
+                });
+            }
+        };
+
+        if (currentCallRef.current.peerConnection) {
+            currentCallRef.current.peerConnection.onnegotiationneeded = handleNegotiationNeeded;
+        }
+
+        return () => {
+            if (currentCallRef.current?.peerConnection) {
+                currentCallRef.current.peerConnection.onnegotiationneeded = null;
+            }
+        };
+    }, [callStarted, currentCallRef.current, localStreamRef.current]);
+
     const formatLastSeen = (date) => {
         if (!date) return "";
         const d = new Date(date);
@@ -195,19 +275,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         const d = new Date(date);
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
-
-    useEffect(() => {
-        if (!selectedChat) return;
-
-        socket.emit("joinChat", selectedChat._id);
-        setMessages([]);
-
-        api.get(`/api/messages/${selectedChat._id}`)
-            .then((res) => {
-                setMessages(res.data);
-            })
-            .catch((err) => console.error(err));
-    }, [selectedChat?._id]);
 
     const handleSendMessage = (text) => {
         if (!text.trim()) return;
@@ -450,29 +517,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     };
 
-    // Add this useEffect to verify video elements are ready
-    useEffect(() => {
-        if (callStarted && callType === 'video') {
-            console.log("Video elements status:");
-            console.log("- Local video element:", localVideoRef.current);
-            console.log("- Remote video element:", remoteVideoRef.current);
-            console.log("- Local stream:", localStreamRef.current);
-
-            // Small delay to ensure DOM is ready
-            const timer = setTimeout(() => {
-                if (localVideoRef.current && localStreamRef.current) {
-                    if (!localVideoRef.current.srcObject) {
-                        console.log("Re-attaching local stream");
-                        localVideoRef.current.srcObject = localStreamRef.current;
-                        localVideoRef.current.play().catch(e => console.log("Play error:", e));
-                    }
-                }
-            }, 100);
-
-            return () => clearTimeout(timer);
-        }
-    }, [callStarted, callType]);
-
     // Reject incoming call
     const rejectCall = () => {
         if (currentCallRef.current) {
@@ -555,16 +599,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     };
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            cleanupLocalStream();
-            if (currentCallRef.current) {
-                currentCallRef.current.close();
-                currentCallRef.current = null;
-            }
-        };
-    }, []);
 
     const isOnline = onlineUsers?.includes(selectedUser?._id);
 
@@ -579,39 +613,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             </div>
         );
     }
-
-    // Add this useEffect after your other useEffects to handle video track renegotiation
-    useEffect(() => {
-        if (!callStarted || !currentCallRef.current) return;
-
-        // This ensures that if video tracks are added/removed during the call, they're handled
-        const handleNegotiationNeeded = () => {
-            console.log("Negotiation needed - renegotiating tracks");
-            if (currentCallRef.current && localStreamRef.current) {
-                // Re-add tracks if needed
-                localStreamRef.current.getTracks().forEach(track => {
-                    if (currentCallRef.current.peerConnection) {
-                        const sender = currentCallRef.current.peerConnection
-                            .getSenders()
-                            .find(s => s.track?.kind === track.kind);
-                        if (sender && sender.track !== track) {
-                            sender.replaceTrack(track);
-                        }
-                    }
-                });
-            }
-        };
-
-        if (currentCallRef.current.peerConnection) {
-            currentCallRef.current.peerConnection.onnegotiationneeded = handleNegotiationNeeded;
-        }
-
-        return () => {
-            if (currentCallRef.current?.peerConnection) {
-                currentCallRef.current.peerConnection.onnegotiationneeded = null;
-            }
-        };
-    }, [callStarted, currentCallRef.current, localStreamRef.current]);
 
     if (!loggedInUser) {
         return null;
