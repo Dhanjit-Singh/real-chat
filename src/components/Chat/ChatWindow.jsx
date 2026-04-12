@@ -44,6 +44,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     const currentCallRef = useRef(null);
     const isAcceptingCall = useRef(false);
     const callEndedRef = useRef(false); // Prevent duplicate call endings
+    const remoteStreamRef = useRef(null);
 
     // Initialize PeerJS
     useEffect(() => {
@@ -78,7 +79,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         peer.on('call', (call) => {
             console.log('📞 Incoming call from:', call.peer);
 
-            // Don't show incoming call if already in a call
             if (callStarted) {
                 console.log("Already in a call, rejecting...");
                 call.close();
@@ -86,6 +86,41 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             }
 
             currentCallRef.current = call;
+
+            // FIX: Attach stream listener IMMEDIATELY
+            call.on('stream', (remoteStream) => {
+                console.log("📹 Receiver got remote stream (early attach)");
+
+                // ✅ ALWAYS store stream
+                remoteStreamRef.current = remoteStream;
+
+                // Try attach immediately
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = remoteStream;
+                    remoteVideoRef.current.play()
+                        .then(() => {
+                            console.log("Remote video playing on receiver");
+                            setRemoteStreamActive(true);
+                        })
+                        .catch(e => console.error("Play error:", e));
+                }
+            });
+
+            call.on('close', () => {
+                console.log("Call closed");
+                if (!callEndedRef.current) {
+                    callEndedRef.current = true;
+                    endCall(false);
+                }
+            });
+
+            call.on('error', (err) => {
+                console.error("Call error:", err);
+                setErrorMessage("Call connection error");
+                setTimeout(() => setErrorMessage(null), 3000);
+                endCall(true);
+            });
+
             setIncomingCall({
                 from: call.peer,
                 fromName: selectedUser?.name || 'User',
@@ -257,6 +292,17 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             }
         };
     }, [callStarted, currentCallRef.current, localStreamRef.current]);
+
+    useEffect(() => {
+        if (callStarted && remoteVideoRef.current && remoteStreamRef.current) {
+            console.log("Re-attaching remote stream after DOM ready");
+
+            remoteVideoRef.current.srcObject = remoteStreamRef.current;
+            remoteVideoRef.current.play()
+                .then(() => setRemoteStreamActive(true))
+                .catch(e => console.error("Play error:", e));
+        }
+    }, [callStarted]);
 
     const formatLastSeen = (date) => {
         if (!date) return "";
@@ -455,20 +501,20 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
-            // CRITICAL FIX: Set up stream handler BEFORE answering
+            // ✅ ADD THIS after answer(stream)
             currentCallRef.current.on('stream', (remoteStream) => {
-                console.log("📹 Receiver got remote stream from caller!");
-                console.log("Remote stream tracks:", remoteStream.getTracks().length);
+                console.log("📹 Receiver got remote stream (AFTER ANSWER)");
+
+                remoteStreamRef.current = remoteStream;
 
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
-                    remoteVideoRef.current.muted = false;
                     remoteVideoRef.current.play()
                         .then(() => {
-                            console.log("✅ Remote video playing on receiver side");
+                            console.log("✅ Remote video playing on receiver");
                             setRemoteStreamActive(true);
                         })
-                        .catch(e => console.error("Remote video play error:", e));
+                        .catch(e => console.error("Play error:", e));
                 }
             });
 
