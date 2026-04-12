@@ -359,7 +359,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 console.log("Setting local video stream on caller side");
                 localVideoRef.current.srcObject = stream;
                 localVideoRef.current.muted = true;
-
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
@@ -456,14 +455,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
-            console.log("Answering the call...");
-
-            // CRITICAL: Answer the call with the stream
-            currentCallRef.current.answer(stream);
-            console.log("Call answered");
-
-            // CRITICAL: Handle remote stream (caller's video)
-            // This is where the caller's video comes in
+            // CRITICAL FIX: Set up stream handler BEFORE answering
             currentCallRef.current.on('stream', (remoteStream) => {
                 console.log("📹 Receiver got remote stream from caller!");
                 console.log("Remote stream tracks:", remoteStream.getTracks().length);
@@ -494,6 +486,11 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 setTimeout(() => setErrorMessage(null), 3000);
                 endCall(true);
             });
+
+            // Now answer the call with the stream
+            console.log("Answering the call...");
+            currentCallRef.current.answer(stream);
+            console.log("Call answered");
 
             setCallStarted(true);
             setCallType(incomingCall?.callType || 'video');
