@@ -121,17 +121,10 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 endCall(true);
             });
 
-            let receivedCallType = 'audio';
-            socket.once("incoming-call-type", (data) => {
-                if (data.from === call.peer) {
-                    receivedCallType = data.callType;
-                }
-            });
-
             setIncomingCall({
                 from: call.peer,
                 fromName: selectedUser?.name || 'User',
-                callType: receivedCallType
+                callType: 'pending'
             });
         });
 
@@ -311,6 +304,29 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     }, [callStarted]);
 
+    useEffect(() => {
+        // Listen for incoming call type from socket
+        const handleIncomingCallType = ({ from, callType }) => {
+            console.log("Received call type from socket:", { from, callType });
+
+            setIncomingCall(prev => {
+                if (prev && prev.from === from) {
+                    return {
+                        ...prev,
+                        callType: callType
+                    };
+                }
+                return prev;
+            });
+        };
+
+        socket.on("incoming-call-type", handleIncomingCallType);
+
+        return () => {
+            socket.off("incoming-call-type", handleIncomingCallType);
+        };
+    }, []);
+
     const formatLastSeen = (date) => {
         if (!date) return "";
         const d = new Date(date);
@@ -415,21 +431,30 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
+            socket.emit("initiate-call", {
+                to: selectedUser._id,
+                from: loggedInUser.id,
+                fromName: loggedInUser.name,
+                chatId: selectedChat._id,
+                callType: type
+            });
+
             console.log("Making call to:", selectedUser._id);
 
             // Make the call with the stream
             const call = peerRef.current.call(selectedUser._id, stream);
             currentCallRef.current = call;
 
-            // Handle remote stream (receiver's video)
+            // Handle remote stream
             call.on('stream', (remoteStream) => {
                 console.log("📹 Caller received remote stream from receiver!");
+                console.log("Remote stream has video:", remoteStream.getVideoTracks().length > 0);
 
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
                     remoteVideoRef.current.play()
                         .then(() => {
-                            console.log("✅ Remote video playing on caller side");
+                            console.log("✅ Remote stream playing on caller side");
                             setRemoteStreamActive(true);
                         })
                         .catch(e => console.error("Remote video play error:", e));
@@ -454,14 +479,6 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             setCallStarted(true);
             setCallType(type);
 
-            socket.emit("initiate-call", {
-                to: selectedUser._id,
-                from: loggedInUser.id,
-                fromName: loggedInUser.name,
-                chatId: selectedChat._id,
-                callType: type
-            });
-
         } catch (error) {
             console.error("❌ Error in startCall:", error);
             setErrorMessage("Unable to access camera/microphone");
@@ -481,6 +498,18 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             return;
         }
 
+        if (incomingCall?.callType === 'pending') {
+            console.log("Waiting for call type...");
+            setErrorMessage("Connecting...");
+            setTimeout(() => {
+                if (incomingCall?.callType === 'pending') {
+                    setErrorMessage("Failed to determine call type");
+                    rejectCall();
+                }
+            }, 2000);
+            return;
+        }
+
         isAcceptingCall.current = true;
         setIsConnecting(true);
         callEndedRef.current = false;
@@ -489,8 +518,10 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             // Cleanup any existing stream
             cleanupLocalStream();
 
+            const isVideoCall = incomingCall?.callType === 'video';
+
             const constraints = {
-                video: incomingCall?.callType === 'video',
+                video: isVideoCall,
                 audio: true
             };
 
@@ -501,12 +532,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             localStreamRef.current = stream;
 
             // Display local video (small window on receiver side)
-            if (localVideoRef.current && incomingCall?.callType === 'video') {
+            if (localVideoRef.current && isVideoCall) {
                 console.log("Setting local video stream on receiver side");
                 localVideoRef.current.srcObject = stream;
                 localVideoRef.current.muted = true;
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
+
+            currentCallRef.current.removeAllListeners('stream');
+            currentCallRef.current.removeAllListeners('close');
+            currentCallRef.current.removeAllListeners('error');
 
             // ✅ ADD THIS after answer(stream)
             currentCallRef.current.on('stream', (remoteStream) => {
@@ -533,6 +568,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 }
             });
 
+            // Add error handler
             currentCallRef.current.on('error', (err) => {
                 console.error("Call error:", err);
                 setErrorMessage("Call connection error");
@@ -540,13 +576,9 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 endCall(true);
             });
 
-            // Now answer the call with the stream
-            console.log("Answering the call...");
             currentCallRef.current.answer(stream);
-            console.log("Call answered");
-
             setCallStarted(true);
-            setCallType(incomingCall?.callType || 'video');
+            setCallType(incomingCall?.callType || 'audio');
 
             socket.emit("accept-call", {
                 to: incomingCall.from,
@@ -679,7 +711,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             )}
 
             {/* Incoming Call Notification */}
-            {incomingCall && !callStarted && (
+            {incomingCall && !callStarted && incomingCall.callType !== 'pending' && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
                         <h3 className="text-lg font-semibold mb-2">
@@ -701,6 +733,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                 Reject
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Show connecting state while waiting for call type */}
+            {incomingCall && !callStarted && incomingCall.callType === 'pending' && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-2">Incoming Call</h3>
+                        <p className="text-gray-600 mb-4">Connecting...</p>
                     </div>
                 </div>
             )}
