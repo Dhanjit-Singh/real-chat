@@ -95,15 +95,17 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 // ✅ ALWAYS store stream
                 remoteStreamRef.current = remoteStream;
 
-                // Try attach immediately
-                if (remoteVideoRef.current) {
+                // ✅ ALWAYS attach audio
+                if (remoteAudioRef.current) {
+                    remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.play().catch(() => { });
+                }
+
+                // ✅ Attach video if available
+                if (remoteStream.getVideoTracks().length > 0 && remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
-                    remoteVideoRef.current.play()
-                        .then(() => {
-                            console.log("Remote video playing on receiver");
-                            setRemoteStreamActive(true);
-                        })
-                        .catch(e => console.error("Play error:", e));
+                    remoteVideoRef.current.play().catch(() => { });
+                    setRemoteStreamActive(true);
                 }
             });
 
@@ -421,23 +423,17 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             call.on('stream', (remoteStream) => {
                 console.log("📡 Received remote stream");
 
-                const hasVideo = remoteStream.getVideoTracks().length > 0;
-
-                if (hasVideo && remoteVideoRef.current) {
-                    // 🎥 VIDEO CALL
-                    remoteVideoRef.current.srcObject = remoteStream;
-                    remoteVideoRef.current.play()
-                        .then(() => {
-                            console.log("✅ Remote video playing");
-                            setRemoteStreamActive(true);
-                        })
-                        .catch(e => console.error("Video play error:", e));
-                } else if (remoteAudioRef.current) {
-                    // 🎧 AUDIO CALL
+                // ✅ ALWAYS attach audio
+                if (remoteAudioRef.current) {
                     remoteAudioRef.current.srcObject = remoteStream;
-                    remoteAudioRef.current.play()
-                        .then(() => console.log("✅ Remote audio playing"))
-                        .catch(e => console.error("Audio play error:", e));
+                    remoteAudioRef.current.play().catch(() => { });
+                }
+
+                // ✅ Attach video if available
+                if (remoteStream.getVideoTracks().length > 0 && remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = remoteStream;
+                    remoteVideoRef.current.play().catch(() => { });
+                    setRemoteStreamActive(true);
                 }
             });
 
@@ -519,14 +515,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
                 remoteStreamRef.current = remoteStream;
 
-                if (remoteVideoRef.current) {
+                if (remoteAudioRef.current) {
+                    remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.play().catch(() => { });
+                }
+
+                // ✅ Attach video if available
+                if (remoteStream.getVideoTracks().length > 0 && remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
-                    remoteVideoRef.current.play()
-                        .then(() => {
-                            console.log("✅ Remote video playing on receiver");
-                            setRemoteStreamActive(true);
-                        })
-                        .catch(e => console.error("Play error:", e));
+                    remoteVideoRef.current.play().catch(() => { });
+                    setRemoteStreamActive(true);
                 }
             });
 
@@ -727,11 +725,12 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                         <FiUser className="text-5xl text-white" />
                                     </div>
                                     <h3 className="text-white text-xl font-semibold">{selectedUser?.name}</h3>
-                                    <audio ref={remoteAudioRef} autoPlay />
                                     <p className="text-gray-400">Audio Call in Progress...</p>
                                 </div>
                             </div>
                         )}
+
+                        <audio ref={remoteAudioRef} autoPlay />
 
                         {/* Local Video (Picture-in-Picture) */}
                         {callType === 'video' && (
