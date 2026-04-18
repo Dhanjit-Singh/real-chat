@@ -36,6 +36,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     const [remoteStreamActive, setRemoteStreamActive] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null); // For non-intrusive errors
 
+    const remoteAudioRef = useRef(null);
     const messagesEndRef = useRef(null);
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
@@ -124,7 +125,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             setIncomingCall({
                 from: call.peer,
                 fromName: selectedUser?.name || 'User',
-                callType: 'video'
+                callType: call.metadata?.callType || 'video'
             });
         });
 
@@ -411,21 +412,32 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             console.log("Making call to:", selectedUser._id);
 
             // Make the call with the stream
-            const call = peerRef.current.call(selectedUser._id, stream);
+            const call = peerRef.current.call(selectedUser._id, stream, {
+                metadata: { callType: type }
+            });
             currentCallRef.current = call;
 
             // Handle remote stream (receiver's video)
             call.on('stream', (remoteStream) => {
-                console.log("📹 Caller received remote stream from receiver!");
+                console.log("📡 Received remote stream");
 
-                if (remoteVideoRef.current) {
+                const hasVideo = remoteStream.getVideoTracks().length > 0;
+
+                if (hasVideo && remoteVideoRef.current) {
+                    // 🎥 VIDEO CALL
                     remoteVideoRef.current.srcObject = remoteStream;
                     remoteVideoRef.current.play()
                         .then(() => {
-                            console.log("✅ Remote video playing on caller side");
+                            console.log("✅ Remote video playing");
                             setRemoteStreamActive(true);
                         })
-                        .catch(e => console.error("Remote video play error:", e));
+                        .catch(e => console.error("Video play error:", e));
+                } else if (remoteAudioRef.current) {
+                    // 🎧 AUDIO CALL
+                    remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.play()
+                        .then(() => console.log("✅ Remote audio playing"))
+                        .catch(e => console.error("Audio play error:", e));
                 }
             });
 
@@ -715,6 +727,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                         <FiUser className="text-5xl text-white" />
                                     </div>
                                     <h3 className="text-white text-xl font-semibold">{selectedUser?.name}</h3>
+                                    <audio ref={remoteAudioRef} autoPlay />
                                     <p className="text-gray-400">Audio Call in Progress...</p>
                                 </div>
                             </div>
