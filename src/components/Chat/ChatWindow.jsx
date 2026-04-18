@@ -121,10 +121,17 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 endCall(true);
             });
 
+            let receivedCallType = 'audio';
+            socket.once("incoming-call-type", (data) => {
+                if (data.from === call.peer) {
+                    receivedCallType = data.callType;
+                }
+            });
+
             setIncomingCall({
                 from: call.peer,
                 fromName: selectedUser?.name || 'User',
-                callType: 'video'
+                callType: receivedCallType
             });
         });
 
@@ -494,7 +501,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             localStreamRef.current = stream;
 
             // Display local video (small window on receiver side)
-            if (localVideoRef.current) {
+            if (localVideoRef.current && incomingCall?.callType === 'video') {
                 console.log("Setting local video stream on receiver side");
                 localVideoRef.current.srcObject = stream;
                 localVideoRef.current.muted = true;
@@ -675,7 +682,9 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             {incomingCall && !callStarted && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-2">Incoming Video Call</h3>
+                        <h3 className="text-lg font-semibold mb-2">
+                            Incoming {incomingCall.callType === 'video' ? 'Video' : 'Audio'} Call
+                        </h3>
                         <p className="text-gray-600 mb-4">{incomingCall.fromName} is calling you...</p>
                         <div className="flex gap-3">
                             <button
