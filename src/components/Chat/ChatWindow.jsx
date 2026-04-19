@@ -514,9 +514,16 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 console.log("📹 Receiver got remote stream (AFTER ANSWER)");
 
                 remoteStreamRef.current = remoteStream;
+                setRemoteStreamActive(true);
+
+                console.log("Tracks:", {
+                    audio: remoteStream.getAudioTracks().length,
+                    video: remoteStream.getVideoTracks().length
+                });
 
                 if (remoteAudioRef.current) {
                     remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.muted = false;
                     remoteAudioRef.current.play().catch(() => { });
                 }
 
