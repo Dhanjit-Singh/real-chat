@@ -307,6 +307,19 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     }, [callStarted]);
 
+    useEffect(() => {
+        if (callStarted && callType === 'audio' && remoteAudioRef.current && remoteStreamRef.current) {
+            console.log("🔁 Re-attaching remote audio (caller)");
+
+            remoteAudioRef.current.srcObject = remoteStreamRef.current;
+            remoteAudioRef.current.muted = false;
+
+            remoteAudioRef.current.play()
+                .then(() => console.log("🔊 Audio reattached"))
+                .catch((e) => console.error("Audio reattach error:", e));
+        }
+    }, [callStarted, callType]);
+
     const formatLastSeen = (date) => {
         if (!date) return "";
         const d = new Date(date);
@@ -423,9 +436,11 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             call.on('stream', (remoteStream) => {
                 console.log("📡 Received remote stream");
 
+                remoteStreamRef.current = remoteStream;
                 // ✅ ALWAYS attach audio
                 if (remoteAudioRef.current) {
                     remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.muted = false;
                     remoteAudioRef.current.play().catch(() => { });
                 }
 
@@ -433,6 +448,8 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 if (remoteStream.getVideoTracks().length > 0 && remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
                     remoteVideoRef.current.play().catch(() => { });
+                    setRemoteStreamActive(true);
+                } else {
                     setRemoteStreamActive(true);
                 }
             });
@@ -692,7 +709,9 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             {incomingCall && !callStarted && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-2">Incoming Video Call</h3>
+                        <h3 className="text-lg font-semibold mb-2">
+                            Incoming {incomingCall?.callType === 'audio' ? 'Audio' : 'Video'} Call
+                        </h3>
                         <p className="text-gray-600 mb-4">{incomingCall.fromName} is calling you...</p>
                         <div className="flex gap-3">
                             <button
