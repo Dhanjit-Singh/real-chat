@@ -35,6 +35,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     const [peerReady, setPeerReady] = useState(false);
     const [remoteStreamActive, setRemoteStreamActive] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null); // For non-intrusive errors
+    const [callDuration, setCallDuration] = useState(0);
 
     const remoteAudioRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -46,6 +47,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     const isAcceptingCall = useRef(false);
     const callEndedRef = useRef(false); // Prevent duplicate call endings
     const remoteStreamRef = useRef(null);
+    const callTimerRef = useRef(null);
 
     // Initialize PeerJS
     useEffect(() => {
@@ -471,6 +473,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             setCallStarted(true);
             setCallType(type);
+            startTimer();
 
             socket.emit("initiate-call", {
                 to: selectedUser._id,
@@ -574,6 +577,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
             setCallStarted(true);
             setCallType(incomingCall?.callType || 'video');
+            startTimer();
 
             socket.emit("accept-call", {
                 to: incomingCall.from,
@@ -616,6 +620,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     // End active call
     const endCall = (emitToOther = true) => {
         console.log("Ending call, emitToOther:", emitToOther);
+        stopTimer();
 
         if (callEndedRef.current && emitToOther) {
             console.log("Call already ended, skipping...");
@@ -691,6 +696,34 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         );
     }
 
+    const startTimer = () => {
+        setCallDuration(0);
+
+        if (callTimerRef.current) {
+            clearInterval(callTimerRef.current);
+        }
+
+        callTimerRef.current = setInterval(() => {
+            setCallDuration(prev => prev + 1);
+        }, 1000);
+    };
+
+    const stopTimer = () => {
+        if (callTimerRef.current) {
+            clearInterval(callTimerRef.current);
+            callTimerRef.current = null;
+        }
+    };
+
+    const formatCallDuration = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+
+        return `${mins.toString().padStart(2, '0')}:${secs
+            .toString()
+            .padStart(2, '0')}`;
+    };
+
     if (!loggedInUser) {
         return null;
     }
@@ -738,12 +771,18 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                     <div className="relative h-full">
                         {/* Remote Video */}
                         {callType === 'video' ? (
-                            <video
-                                ref={remoteVideoRef}
-                                autoPlay
-                                playsInline
-                                className="w-full h-full object-cover"
-                            />
+                            <>
+                                <video
+                                    ref={remoteVideoRef}
+                                    autoPlay
+                                    playsInline
+                                    className="w-full h-full object-cover"
+                                />
+
+                                <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
+                                    {formatCallDuration(callDuration)}
+                                </div>
+                            </>
                         ) : (
                             <div className="flex items-center justify-center h-full">
                                 <div className="text-center">
@@ -751,7 +790,10 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                                         <FiUser className="text-5xl text-white" />
                                     </div>
                                     <h3 className="text-white text-xl font-semibold">{selectedUser?.name}</h3>
-                                    <p className="text-gray-400">Audio Call in Progress...</p>
+                                    {/* <p className="text-gray-400">Audio Call in Progress...</p> */}
+                                    <p className="text-gray-400 text-lg mt-2">
+                                        {formatCallDuration(callDuration)}
+                                    </p>
                                 </div>
                             </div>
                         )}
