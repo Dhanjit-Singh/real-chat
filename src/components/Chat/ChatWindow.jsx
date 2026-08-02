@@ -31,7 +31,8 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);
     const [isAudioEnabled, setIsAudioEnabled] = useState(true);
     const [isConnecting, setIsConnecting] = useState(false);
-    const [peerReady, setPeerReady] = useState(true); // Always ready for socket signaling
+    const [callConnecting, setCallConnecting] = useState(false); // ✅ ADDED
+    const [peerReady, setPeerReady] = useState(true);
     const [remoteStreamActive, setRemoteStreamActive] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
     const [callDuration, setCallDuration] = useState(0);
@@ -66,7 +67,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             });
         };
 
-        // ✅ NEW: Handle WebRTC offer from mobile
+        // ✅ Handle WebRTC offer from mobile
         const handleWebRTCOffer = async (data) => {
             console.log('📞 Received WebRTC offer from:', data.from);
             console.log('📦 Offer:', data.offer);
@@ -79,7 +80,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             });
         };
 
-        // ✅ NEW: Handle WebRTC answer from mobile
+        // ✅ Handle WebRTC answer from mobile
         const handleWebRTCAnswer = async (data) => {
             console.log('📞 Received WebRTC answer from:', data.from);
             
@@ -96,7 +97,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             }
         };
 
-        // ✅ NEW: Handle ICE candidates
+        // ✅ Handle ICE candidates
         const handleWebRTCIceCandidate = async (data) => {
             console.log('🧊 Received ICE candidate from:', data.from);
             
@@ -112,7 +113,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             }
         };
 
-        // ✅ NEW: Handle call ended
+        // ✅ Handle call ended
         const handleWebRTCCallEnded = () => {
             console.log('📞 WebRTC call ended by other user');
             if (!callEndedRef.current && callStarted) {
@@ -122,7 +123,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
             }
         };
 
-        // ✅ NEW: Handle call rejected
+        // ✅ Handle call rejected
         const handleWebRTCCallRejected = () => {
             console.log('📞 WebRTC call rejected by other user');
             if (!callEndedRef.current) {
@@ -158,7 +159,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         socket.on("receiveMessage", handleReceiveMessage);
         socket.on("receiveImage", handleReceiveImage);
         
-        // ✅ NEW: WebRTC signaling events
+        // ✅ WebRTC signaling events
         socket.on("webrtc-offer", handleWebRTCOffer);
         socket.on("webrtc-answer", handleWebRTCAnswer);
         socket.on("webrtc-ice-candidate", handleWebRTCIceCandidate);
@@ -314,7 +315,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     };
 
-    // ✅ UPDATED: Start call using socket-based signaling
+    // ✅ Start call using socket-based signaling
     const startCall = async (type) => {
         console.log("startCall called with type:", type);
 
@@ -324,6 +325,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
 
         setIsConnecting(true);
+        setCallConnecting(true);
         callEndedRef.current = false;
 
         try {
@@ -346,7 +348,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
-            // ✅ Create RTCPeerConnection (not PeerJS)
+            // ✅ Create RTCPeerConnection
             const pc = new RTCPeerConnection({
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
@@ -451,7 +453,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     };
 
-    // ✅ UPDATED: Accept incoming call using socket-based signaling
+    // ✅ Accept incoming call using socket-based signaling
     const acceptCall = async () => {
         console.log("Accepting call...");
 
@@ -462,6 +464,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
 
         isAcceptingCall.current = true;
         setIsConnecting(true);
+        setCallConnecting(true);
         callEndedRef.current = false;
 
         try {
@@ -484,7 +487,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
                 localVideoRef.current.play().catch(e => console.log("Local video play error:", e));
             }
 
-            // ✅ Create RTCPeerConnection (not PeerJS)
+            // ✅ Create RTCPeerConnection
             const pc = new RTCPeerConnection({
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
@@ -620,7 +623,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         });
     };
 
-    // ✅ UPDATED: Reject call
+    // ✅ Reject call
     const rejectCall = () => {
         if (incomingCall) {
             socket.emit("webrtc-call-rejected", {
@@ -645,7 +648,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         }
     };
 
-    // ✅ UPDATED: End call
+    // ✅ End call
     const endCall = (emitToOther = true) => {
         console.log("Ending call, emitToOther:", emitToOther);
         stopTimer();
@@ -686,6 +689,7 @@ const ChatWindow = ({ selectedChat, loggedInUser, selectedUser, onlineUsers, onB
         setIsVideoEnabled(true);
         setIsAudioEnabled(true);
         setIsConnecting(false);
+        setCallConnecting(false);
         setRemoteStreamActive(false);
         setIncomingCall(null);
         setPendingOffer(null);
